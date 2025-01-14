@@ -2,7 +2,7 @@
   "name": "bc-wallet-mobile-app",
   "version": "1.0.0",
   "private": true,
-  "description": "BC Wallet to hold Verifiable Credentials",
+  "description": "ASML Wallet to hold Verifiable Credentials",
   "main": "index.js",
   "license": "Apache-2.0",
   "engines": {
@@ -124,6 +124,7 @@
     "react-native-webview": "11.26.1",
     "reflect-metadata": "0.1.13",
     "rxjs": "^7.8.1",
+    "sharp": "0.28.0",
     "tsyringe": "^4.7.0",
     "uuid": "9.0.0"
   },
@@ -131,6 +132,7 @@
     "@babel/core": "7.22.1",
     "@babel/preset-env": "7.22.20",
     "@babel/runtime": "7.23.1",
+    "@bam.tech/react-native-make": "^3.0.3",
     "@commitlint/cli": "11.0.0",
     "@eslint/js": "^8.56.0",
     "@react-native-community/eslint-config": "^3.2.0",

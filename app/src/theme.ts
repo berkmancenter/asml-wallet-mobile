@@ -59,12 +59,12 @@ const GrayscaleColors: IGrayscaleColors = {
 }
 
 const BrandColors: IBrandColors = {
-  primary: '#003366',
+  primary: '#000000',
   primaryDisabled: `#757575`,
-  secondary: '#FFFFFFFF',
+  secondary: '#000000',
   secondaryDisabled: `#757575`,
   primaryLight: '#D9EAF7',
-  highlight: '#FCBA19',
+  highlight: '#FFFFFF',
   primaryBackground: '#F2F2F2',
   secondaryBackground: '#FFFFFF',
   modalPrimary: '#003366',
@@ -600,7 +600,7 @@ export const ChatTheme = {
   optionsText: ColorPallet.grayscale.black,
   openButtonStyle: {
     borderRadius: 32,
-    backgroundColor: ColorPallet.brand.primary,
+    backgroundColor: ColorPallet.grayscale.white,
     paddingTop: 8,
     paddingBottom: 8,
     paddingLeft: 16,
@@ -721,14 +721,14 @@ export const Assets: IAssets = {
   svg: { ...BifoldImageAssets.svg, logo: Logo as React.FC },
   img: {
     logoSecondary: {
-      src: require('./assets/img/logo-large.png'),
+      src: require('./assets/img/asml-logo.png'),
       aspectRatio: 1,
-      height: 120,
-      width: 120,
+      height: 350,
+      width: 155,
       resizeMode: 'contain',
     },
     logoPrimary: {
-      src: require('./assets/img/logo-large-white.png'),
+      src: require('./assets/img/asml-logo.png'),
       height: 170,
       width: 170,
     },

@@ -170,7 +170,7 @@ const Splash = () => {
     },
     logoContainer: {
       alignSelf: 'center',
-      marginBottom: 30,
+      marginBottom: 100,
     },
   })
 
@@ -389,7 +389,7 @@ const Splash = () => {
         <View style={styles.logoContainer}>
           <Image
             source={Assets.img.logoPrimary.src}
-            style={{ width: Assets.img.logoPrimary.width, height: Assets.img.logoPrimary.height }}
+            style={{ width: 350, height: 155 }}
             testID={testIdWithKey('LoadingActivityIndicatorImage')}
           />
         </View>

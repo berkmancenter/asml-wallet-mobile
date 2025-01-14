@@ -5,7 +5,7 @@ import {
   useDefaultStackOptions,
   useTheme,
 } from '@hyperledger/aries-bifold-core'
-import { createStackNavigator } from '@react-navigation/stack'
+import { createStackNavigator, StackNavigationOptions } from '@react-navigation/stack'
 import { useTranslation } from 'react-i18next'
 
 import EvidenceCollectionStep from '../screens/EvidenceCollectionStep'
@@ -30,7 +30,7 @@ const VerifiedPersonStack: React.FC = () => {
   const { t } = useTranslation()
 
   return (
-    <Stack.Navigator screenOptions={{ ...defaultStackOptions }}>
+    <Stack.Navigator screenOptions={defaultStackOptions as StackNavigationOptions}>
       <Stack.Screen
         name={BCScreens.VerificationSteps}
         component={VerificationSteps}

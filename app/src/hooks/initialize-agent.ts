@@ -52,7 +52,7 @@ const useInitializeBCAgent = () => {
 
       const options = {
         config: {
-          label: store.preferences.walletName || 'BC Wallet',
+          label: store.preferences.walletName || 'ASML Wallet',
           walletConfig: {
             id: walletSecret.id,
             key: walletSecret.key,
@@ -81,6 +81,8 @@ const useInitializeBCAgent = () => {
       }
 
       logger.info(store.developer.enableProxy && Config.INDY_VDR_PROXY_URL ? 'VDR Proxy enabled' : 'VDR Proxy disabled')
+
+      logger.debug(`Mediator URL: ${Config.MEDIATOR_URL}`)
 
       const newAgent = new Agent(options)
       const wsTransport = new WsOutboundTransport()
@@ -164,44 +166,95 @@ const useInitializeBCAgent = () => {
   )
 
   const initializeAgent = useCallback(async (): Promise<Agent | undefined> => {
-    if (!walletSecret?.id || !walletSecret.key) {
-      return
+    try {
+      if (!walletSecret?.id || !walletSecret.key) {
+        logger.error('Missing wallet secret credentials')
+        return
+      }
+
+      logger.debug('Loading cached ledgers...')
+      const cachedLedgers = await loadCachedLedgers()
+      const ledgers = cachedLedgers ?? indyLedgers
+
+      logger.debug(`Using ledgers: ${JSON.stringify(ledgers, null, 2)}`)
+
+      logger.debug('Creating new agent...')
+      const newAgent = await createNewAgent(ledgers)
+      if (!newAgent) {
+        logger.error('Failed to create new agent')
+        return
+      }
+
+      logger.info('Migrating agent if required...')
+      try {
+        await migrateIfRequired(newAgent)
+      } catch (e: unknown) {
+        logger.error(`Migration failed: ${(e as Error).message}`)
+        throw e
+      }
+
+      logger.info('Initializing new agent...')
+      try {
+        await Promise.race([
+          newAgent.initialize(),
+          new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Agent initialization timed out after 60s')), 60000)
+          ),
+        ])
+      } catch (e: unknown) {
+        logger.error(`Agent initialization failed: ${(e as Error).message}`)
+        logger.error('Agent config:', newAgent.config)
+        throw e
+      }
+
+      logger.info('Warming up cache...')
+      try {
+        await warmUpCache(newAgent, cachedLedgers)
+      } catch (e: unknown) {
+        logger.error(`Cache warmup failed: ${(e as Error).message}`)
+        // Don't throw here as this is non-critical
+      }
+
+      logger.info('Creating link secret if required...')
+      try {
+        await createLinkSecretIfRequired(newAgent)
+      } catch (e: unknown) {
+        logger.error(`Link secret creation failed: ${(e as Error).message}`)
+        throw e
+      }
+
+      if (store.preferences.usePushNotifications) {
+        logger.info('Activating push notifications...')
+        try {
+          await activate(newAgent)
+        } catch (e: unknown) {
+          logger.error(`Push notification activation failed: ${(e as Error).message}`)
+          // Don't throw as this is non-critical
+        }
+      }
+
+      // In case the old attestationMonitor is still active, stop it and start a new one
+      logger.info('Starting attestation monitor...')
+      try {
+        attestationMonitor?.stop()
+        attestationMonitor?.start(newAgent)
+      } catch (e: unknown) {
+        logger.error(`Attestation monitor setup failed: ${(e as Error).message}`)
+        // Don't throw as this is non-critical
+      }
+
+      logger.info('Setting new agent...')
+      setAgent(newAgent)
+
+      logger.debug('Agent initialization completed successfully')
+
+      return newAgent
+    } catch (error: unknown) {
+      logger.error('Agent initialization failed:', {
+        error: error instanceof Error ? error.message : String(error),
+      })
+      throw error
     }
-
-    const cachedLedgers = await loadCachedLedgers()
-    const ledgers = cachedLedgers ?? indyLedgers
-
-    const newAgent = await createNewAgent(ledgers)
-    if (!newAgent) {
-      return
-    }
-
-    logger.info('Migrating agent if required...')
-    await migrateIfRequired(newAgent)
-
-    logger.info('Initializing new agent...')
-    await newAgent.initialize()
-
-    logger.info('Warming up cache...')
-    await warmUpCache(newAgent, cachedLedgers)
-
-    logger.info('Creating link secret if required...')
-    await createLinkSecretIfRequired(newAgent)
-    
-    if (store.preferences.usePushNotifications) {
-      logger.info('Activating push notifications...')
-      await activate(newAgent)
-    }
-    
-    // In case the old attestationMonitor is still active, stop it and start a new one
-    logger.info('Starting attestation monitor...')
-    attestationMonitor?.stop()
-    attestationMonitor?.start(newAgent)
-
-    logger.info('Setting new agent...')
-    setAgent(newAgent)
-
-    return newAgent
   }, [
     setAgent,
     createNewAgent,
